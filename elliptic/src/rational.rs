@@ -3,17 +3,15 @@ use std::cmp::{PartialEq, Eq};
 use std::fmt::{Display, Formatter, Result};
 use crate::utils;
 
-use::num_bigint::{BigInt, BigUint, Sign};
-
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct Rational {
-    p: BigInt,
-    q: BigUint
+    p: i128,
+    q: u128
 }
 
 impl Display for Rational {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        if self.q == BigUint::from(1 as u8) {
+        if self.q == 1 {
             write!(f, "{}", self.p)
         }
         else {
@@ -35,9 +33,9 @@ impl Add for Rational {
     
     fn add(self, other: Rational) -> Rational {
         // (p1/q1 + p2/q2) = (1/q1q2)(p1*qq2 + p2*q1)
-        let numerator = self.p * BigInt::from_biguint(Sign::NoSign, other.q.clone()) 
-        + other.p * BigInt::from_biguint(Sign::NoSign, self.q.clone());
-        let denominator = &self.q * &other.q;
+        let numerator = self.p * (other.q as i128)
+        + other.p * (self.q as i128);
+        let denominator = self.q * other.q;
         Rational::new(numerator, denominator)
     }
 }
@@ -85,8 +83,8 @@ impl Sub for Rational {
 
     fn sub(self, other: Rational) -> Rational {
         // (p1/q1 - p2/q2) = (1/q1q2)(p1*q2 - p2*q1)
-        let numerator = self.p * BigInt::from_biguint(Sign::NoSign, other.q.clone())
-        - other.p * BigInt::from_biguint(Sign::NoSign, self.q.clone());
+        let numerator = self.p * (other.q as i128)
+        - other.p * (self.q as i128);
         let denominator = self.q * other.q;
         Rational::new(numerator, denominator)
     }
@@ -114,10 +112,20 @@ impl Div for Rational {
     type Output = Rational;
 
     fn div(self, other: Rational) -> Rational {
-        let (sign, p) = other.p.into_parts();
-        let q = BigInt::from_biguint(sign, other.q);
 
-        self * Rational::new(q, p) // flipped
+        assert!(other.p != 0, "Divide by zero.");
+        
+        let numerator: i128;
+        let denominator: u128;
+        if other.p > 0 {
+            numerator = self.p * (other.q as i128);
+            denominator = (other.p as u128) * self.q;
+        }
+        else {
+            numerator = - self.p * (other.q as i128);
+            denominator = (-other.p as u128) * self.q;
+        }
+        Rational::new(numerator, denominator)
     }
 }
 
@@ -125,9 +133,7 @@ impl Mul<i64> for Rational {
     type Output = Rational;
 
     fn mul(self, number: i64) -> Rational {
-        let numerator = self.p * number;
-        let denominator = self.q;
-        Rational::new(numerator, denominator)
+        Rational::new(self.p * (number as i128), self.q)
     }
 }
 
@@ -141,21 +147,20 @@ impl Mul<Rational> for i64 {
 
 impl Rational {
 
-    pub fn new(numerator: BigInt, denominator: BigUint) -> Rational {
-        let mut p = numerator.clone();
-        let mut q = denominator.clone();
-        let gcd = utils::gcd(numerator.into_parts().1, denominator);
-        p /= BigInt::from_biguint(Sign::NoSign, gcd.clone());
-        q /= gcd;
-        Rational { p, q }
+    pub fn new(numerator: i128, denominator: u128) -> Rational {
+        let unum = if numerator < 0 {- numerator as u128} else {numerator as u128};
+        let gcd = utils::gcd(unum, denominator);
+        let p = numerator / (gcd as i128);
+        let q = denominator / gcd;
+        Rational { p , q }
     }
 
     pub fn zero() -> Rational {
-        Rational { p : BigInt::from(0), q : BigUint::from(1 as u8) }
+        Rational { p : 0, q : 1 }
     }
 
     pub fn from_i64(num: i64) -> Rational {
-        Rational { p : BigInt::from(num), q : BigUint::from(1 as u8) }
+        Rational { p : num as i128, q : 1 }
     }
 
 }

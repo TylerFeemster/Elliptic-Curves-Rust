@@ -1,8 +1,7 @@
-use::num_bigint::BigUint;
 
-pub fn gcd(mut item1: BigUint, mut item2: BigUint) -> BigUint {
-    while item2 != BigUint::ZERO {
-        let temp = item2.clone();
+pub fn gcd(mut item1: u128, mut item2: u128) -> u128 {
+    while item2 != 0 {
+        let temp = item2;
         item2 = item1 % item2;
         item1 = temp;
     }

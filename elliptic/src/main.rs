@@ -64,19 +64,22 @@ fn main() {
     let curve = curve::from_coeffs(&coeffs);
 
     let p0 = Point::new(&curve, Rational::zero(), Rational::from_i64(1));
-    let mut p = p0.clone();
-    for _ in 1..10 {
+    let mut p = p0;
+    for _ in 1..14 {
         println!("{} ... {}", p, p.verify());
-        p = p + p0.clone();
+        p = p + p0;
     }
 
-    let mul = 9 * p0.clone();
+    let mut p = -p0;
+    for _ in 1..14 {
+        println!("{} ... {}", p, p.verify());
+        p = p - p0;
+    }
+
+    let mul = 9 * p0;
     println!("{} ... {}", mul, mul.verify());
 
-    let same_mul = p0.clone() + p0.clone().double().double().double();
+    let same_mul = p0 + p0.double().double().double();
     println!("{} ... {}", same_mul, same_mul.verify() );
-
-    let big_boy = p0.clone().double().double().double().double();
-    println!("{} ... {}", big_boy, big_boy.verify());
 
 }
