@@ -1,3 +1,4 @@
 elliptic/data/*
 elliptic/target
 elliptic/Cargo.lock
+trash*
